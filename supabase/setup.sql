@@ -395,5 +395,13 @@ update public.epk_profile
        rider_venue = array_remove(rider_venue, '1 wireless mic for MC duties')
  where 'Rane Four controller' = any(rider_bring) or '1 wireless mic for MC duties' = any(rider_venue);
 
+-- Added 2026-11-14: TikTok and YouTube (verified from the Linktree). Safe to re-run.
+insert into public.epk_links (kind, label, url, note, sort_order)
+select 'social', 'TikTok', 'https://www.tiktok.com/@djedyed', '@djedyed', 4
+ where not exists (select 1 from public.epk_links where url = 'https://www.tiktok.com/@djedyed');
+insert into public.epk_links (kind, label, url, note, sort_order)
+select 'social', 'YouTube', 'https://www.youtube.com/c/EddieEddjedyed', 'Eddie Ed', 5
+ where not exists (select 1 from public.epk_links where url = 'https://www.youtube.com/c/EddieEddjedyed');
+
 -- Done. Next: Authentication → Users → Add user (tick "Auto Confirm User"),
 -- then sign in to the back office once. That first sign-in makes you the admin.
