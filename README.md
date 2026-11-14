@@ -49,3 +49,11 @@ python3 -m http.server 8001
 ## Moving to a different Supabase project
 
 Change the URL, key and project ref in `config.js` here and in the public site's `config.js`. Then run `supabase/setup.sql` in the new project.
+
+## Publishing changes
+
+This repo is pushed from Ed's Mac as **djedyed**, using the GitHub CLI (`gh`) login that git now uses for github.com.
+
+1. `gh auth status` should show **djedyed** as the active account. Use `gh auth switch` if another account is active.
+2. Commit, then `git push` (or click **Push origin** in GitHub Desktop).
+3. Check it landed: `git ls-remote https://github.com/djedyed/djedyedepkbo refs/heads/main` must print the same commit as `git rev-parse main`.
