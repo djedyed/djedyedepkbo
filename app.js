@@ -495,6 +495,7 @@ const PROFILE_FIELDS = [
   { k: 'genres', label: 'Genres', type: 'csv', wide: true, hint: 'separate with commas' },
   { k: 'booking_url', label: 'Booking link', type: 'url' },
   { k: 'booking_email', label: 'Public booking email (optional)', type: 'email' },
+  { k: 'booking_phone', label: 'Public booking phone (optional)', hint: 'with country code' },
   { k: 'hero_image_url', label: 'Press photo link', type: 'url', wide: true },
   { k: 'rider_bring', label: 'Rider — I bring', type: 'list', hint: 'one item per line' },
   { k: 'rider_venue', label: 'Rider — venue provides', type: 'list', hint: 'one item per line' },
@@ -558,7 +559,7 @@ TABS.publish = async (panel) => {
 async function downloadSnapshot(status) {
   try {
     const [profile, highlights, links, reviews] = await Promise.all([
-      must(sb.from('epk_profile').select('stage_name, aka, tagline, short_bio, full_bio, base_location, genres, booking_url, booking_email, hero_image_url, rider_bring, rider_venue').eq('id', 1).single()),
+      must(sb.from('epk_profile').select('stage_name, aka, tagline, short_bio, full_bio, base_location, genres, booking_url, booking_email, booking_phone, hero_image_url, rider_bring, rider_venue').eq('id', 1).single()),
       must(sb.from('epk_highlights').select('year_label, sort_year, title, detail, venue, city, proof_level, source_label, source_url, source2_label, source2_url, featured, sort_order').eq('is_published', true).order('sort_order')),
       must(sb.from('epk_links').select('kind, label, url, note, sort_order').eq('is_published', true).order('sort_order')),
       must(sb.from('epk_reviews').select('quote, author, source_label, source_url, sort_order').eq('is_published', true).order('sort_order')),

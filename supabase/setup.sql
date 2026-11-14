@@ -78,6 +78,7 @@ create table if not exists public.epk_profile (
   genres         text[] not null default '{}',
   booking_url    text,
   booking_email  text,
+  booking_phone  text check (char_length(booking_phone) <= 40),
   hero_image_url text,
   rider_bring    text[] not null default '{}',
   rider_venue    text[] not null default '{}',
@@ -408,6 +409,14 @@ select 'social', 'YouTube', 'https://www.youtube.com/c/EddieEddjedyed', 'Eddie E
 update public.epk_profile
    set booking_email = 'djedyed@gmail.com'
  where id = 1 and coalesce(booking_email, '') = '';
+
+-- Added 2026-11-14: public booking phone. Safe to re-run; adds the column if it is
+-- missing and fills it in only while it is empty.
+alter table public.epk_profile
+  add column if not exists booking_phone text check (char_length(booking_phone) <= 40);
+update public.epk_profile
+   set booking_phone = '+1 347 377 2968'
+ where id = 1 and coalesce(booking_phone, '') = '';
 
 -- Done. Next: Authentication → Users → Add user (tick "Auto Confirm User"),
 -- then sign in to the back office once. That first sign-in makes you the admin.
