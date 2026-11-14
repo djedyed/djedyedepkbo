@@ -289,8 +289,8 @@ insert into public.epk_profile (
   'New York / New Jersey',
   array['Kwaito','Afro House','Amapiano','Zimdancehall','Ndombolo','Afrobeat','Soukous','Deep & Soulful House','Soul & R&B','Hip-Hop','Reggae & Dancehall','Old School'],
   'https://calendly.com/africangigs',
-  array['Laptop running Serato DJ Pro','Rane Four controller','Headphones and all cabling','On request: own Bose professional PA for rooms with no sound system'],
-  array['2 line outputs (XLR or 1/4") to the house mixer','Booth monitor','Sturdy table at waist height, about 6 ft','2 grounded power outlets at the booth','1 wireless mic for MC duties','45 minutes'' access before doors to set up']
+  array['Laptop running Serato DJ Pro','Rane Performer controller','Headphones and all cabling','On request: own Bose professional PA for rooms with no sound system'],
+  array['2 line outputs (XLR or 1/4") to the house mixer','Booth monitor','Sturdy table at waist height, about 6 ft','2 grounded power outlets at the booth','45 minutes'' access before doors to set up']
 )
 on conflict (id) do nothing;
 
@@ -387,6 +387,13 @@ begin
    where full_bio like '%On February 23, 2023%' and full_bio not like '%July 6, 2015%';
 end;
 $$;
+
+-- Added 2026-11-14: DJ only (no MC/host), and the Rane Performer replaces the Rane Four.
+-- Safe to re-run.
+update public.epk_profile
+   set rider_bring = array_replace(rider_bring, 'Rane Four controller', 'Rane Performer controller'),
+       rider_venue = array_remove(rider_venue, '1 wireless mic for MC duties')
+ where 'Rane Four controller' = any(rider_bring) or '1 wireless mic for MC duties' = any(rider_venue);
 
 -- Done. Next: Authentication → Users → Add user (tick "Auto Confirm User"),
 -- then sign in to the back office once. That first sign-in makes you the admin.
