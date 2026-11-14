@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="assets/logo-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/logo-180.png">
+  <title>Back Office — DJ Eddie Ed EPK</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <p class="wordmark"><img src="assets/logo-64.png" alt="" width="26" height="26">EDDIE ED <span>BACK OFFICE</span></p>
+    <div class="who" id="who" hidden>
+      <span id="who-email"></span>
+      <button class="btn btn-ghost btn-sm" id="signout" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <!-- Sign in -->
+  <main id="view-login" class="narrow" hidden>
+    <h1>Sign in</h1>
+    <p class="muted">Only the admin account can open the back office. The first account that signs in becomes the admin.</p>
+    <form id="login-form" class="stack">
+      <label>Email<input name="email" type="email" required autocomplete="username"></label>
+      <label>Password<input name="password" type="password" required minlength="8" autocomplete="current-password"></label>
+      <div class="row">
+        <button class="btn btn-primary" type="submit">Sign in</button>
+        <button class="btn btn-ghost" type="button" id="signup">Create admin account</button>
+      </div>
+      <p class="status" id="login-status" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <!-- Database not set up yet -->
+  <main id="view-setup" class="narrow" hidden>
+    <h1>One step left: set up the database</h1>
+    <ol class="steps">
+      <li>Open the <a href="https://supabase.com/dashboard/project/pupqbdnaelylefsiebqc/sql/new" target="_blank" rel="noopener">Supabase SQL Editor</a>.</li>
+      <li>Paste the whole of <code>supabase/setup.sql</code> from this repository and press <strong>Run</strong>.</li>
+      <li>Come back here and reload the page.</li>
+    </ol>
+    <p class="muted" id="setup-detail"></p>
+  </main>
+
+  <!-- Signed in but not the admin -->
+  <main id="view-denied" class="narrow" hidden>
+    <h1>Not authorized</h1>
+    <p class="muted">This account is signed in but is not the EPK admin. Sign out and use the admin account.</p>
+  </main>
+
+  <!-- The office -->
+  <div id="view-app" hidden>
+    <nav class="tabs" aria-label="Back office sections">
+      <button type="button" data-tab="inbox" aria-current="page">Inbox <span class="badge" id="new-count" hidden></span></button>
+      <button type="button" data-tab="highlights">Highlights</button>
+      <button type="button" data-tab="profile">Profile</button>
+      <button type="button" data-tab="links">Links &amp; mixes</button>
+      <button type="button" data-tab="reviews">Reviews</button>
+      <button type="button" data-tab="rates">Rates</button>
+      <button type="button" data-tab="publish">Publish</button>
+    </nav>
+    <main class="panel" id="panel" tabindex="-1"></main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
