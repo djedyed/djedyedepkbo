@@ -403,5 +403,11 @@ insert into public.epk_links (kind, label, url, note, sort_order)
 select 'social', 'YouTube', 'https://www.youtube.com/c/EddieEddjedyed', 'Eddie Ed', 5
  where not exists (select 1 from public.epk_links where url = 'https://www.youtube.com/c/EddieEddjedyed');
 
+-- Added 2026-11-14: public booking email. Safe to re-run; fills it in only while it is empty,
+-- so a change made later in the back office is kept.
+update public.epk_profile
+   set booking_email = 'djedyed@gmail.com'
+ where id = 1 and coalesce(booking_email, '') = '';
+
 -- Done. Next: Authentication → Users → Add user (tick "Auto Confirm User"),
 -- then sign in to the back office once. That first sign-in makes you the admin.
