@@ -360,5 +360,33 @@ begin
 end;
 $$;
 
+-- Added 2026-11-14: Marcus Garvey Park, July 6, 2015 (third-party record).
+-- Safe to re-run: adds the row only once, and updates the bios only if they
+-- still read the way the seed wrote them.
+do $$
+begin
+  if not exists (select 1 from public.epk_highlights where title = 'Marcus Garvey Park, with Les Nubians') then
+    update public.epk_highlights set sort_order = sort_order + 1 where sort_order >= 4;
+    insert into public.epk_highlights
+      (sort_year, year_label, title, detail, venue, city, proof_level, source_label, source_url, source2_label, source2_url, featured, is_published, sort_order)
+    values
+      (2015, 'Jul 6, 2015', 'Marcus Garvey Park, with Les Nubians',
+       'Shared the bill with Les Nubians at the free I Am ImageNation outdoor film and music festival.',
+       'Marcus Garvey Park Amphitheater', 'Harlem, New York', 'third_party',
+       'Rolling Out report + video', 'https://rollingout.com/2015/07/07/les-nubians-headlines-imagenation-outdoor-film-music-festival/',
+       'Routes event listing naming DJ Eddie Ed', 'https://routes-mag.com/?p=5397',
+       false, true, 4);
+  end if;
+
+  update public.epk_profile
+     set short_bio = replace(short_bio, 'NJPAC and, in 2023,', 'NJPAC, Marcus Garvey Park with Les Nubians and, in 2023,')
+   where short_bio like '%NJPAC and, in 2023,%' and short_bio not like '%Les Nubians%';
+
+  update public.epk_profile
+     set full_bio = replace(full_bio, E'\n\nOn February 23, 2023', E'\n\nOn July 6, 2015 he shared the bill with Les Nubians at ImageNation’s free outdoor film and music festival in Harlem’s Marcus Garvey Park.\n\nOn February 23, 2023')
+   where full_bio like '%On February 23, 2023%' and full_bio not like '%July 6, 2015%';
+end;
+$$;
+
 -- Done. Next: Authentication → Users → Add user (tick "Auto Confirm User"),
 -- then sign in to the back office once. That first sign-in makes you the admin.
