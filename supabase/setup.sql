@@ -90,6 +90,7 @@ create table if not exists public.epk_highlights (
   sort_year     int  not null,
   year_label    text not null,
   title         text not null,
+  subline       text,
   detail        text,
   venue         text,
   city          text,
@@ -99,6 +100,9 @@ create table if not exists public.epk_highlights (
   source_url    text,
   source2_label text,
   source2_url   text,
+  image_url     text,
+  image_alt     text,
+  image_caption text,
   featured      boolean not null default false,
   is_published  boolean not null default false,
   sort_order    int not null default 0,
@@ -417,6 +421,52 @@ alter table public.epk_profile
 update public.epk_profile
    set booking_phone = '+1 347 377 2968'
  where id = 1 and coalesce(booking_phone, '') = '';
+
+-- Added 2026-11-15: the EPK page-3 layout on the site (a featured card with a photo, then
+-- compact rows with a short line under each title). Safe to re-run: the columns are added
+-- once, and each value is filled in only while it is still empty, or still reads the way
+-- the seed wrote it, so edits made in the back office are kept.
+alter table public.epk_highlights add column if not exists subline text;
+alter table public.epk_highlights add column if not exists image_url text;
+alter table public.epk_highlights add column if not exists image_alt text;
+alter table public.epk_highlights add column if not exists image_caption text;
+
+update public.epk_highlights h
+   set subline = v.subline
+  from (values
+    ('Apollo Theater, Harlem', 'Harlem · ImageNation’s Cocktails & Sol Cinema'),
+    ('Official after party, Shrine World Music Venue', 'Harlem · with Afro-Latino band Sauce Y'),
+    ('33 sets logged publicly on Serato', 'Tracklists published Sept 2011 – Feb 2023'),
+    ('Marcus Garvey Park, with Les Nubians', 'I Am ImageNation festival · Harlem amphitheater'),
+    ('NJPAC and the African Film Festival', 'New Jersey Performing Arts Center'),
+    ('First kwaito-exclusive DJ at Central Park SummerStage', 'Central Park, New York'),
+    ('First kwaito-exclusive DJ at SummerStage', 'Central Park, New York'),
+    ('Naked Lunch “Share Libations”', 'DJ of the famous after-work party, New York'),
+    ('Botswana National DJ mix show champion', 'Botswana National DJ ''98')
+  ) as v(title, subline)
+ where h.title = v.title and coalesce(h.subline, '') = '';
+
+update public.epk_highlights
+   set title = 'First kwaito-exclusive DJ at SummerStage'
+ where title = 'First kwaito-exclusive DJ at Central Park SummerStage';
+
+update public.epk_highlights
+   set detail = 'DJ for the South African cocktail reception at ImageNation’s Cocktails & Sol Cinema: Asinamali, a screening of Mbongeni Ngema’s film in the Apollo’s 2022–23 season.'
+ where title = 'Apollo Theater, Harlem'
+   and detail = 'DJ for the South African cocktail reception at ImageNation’s Cocktails & Sol Cinema: Asinamali, Mbongeni Ngema’s film.';
+
+update public.epk_highlights set source_label = 'Event: apollotheater.org listing'
+ where title = 'Apollo Theater, Harlem' and source_label = 'Apollo event listing';
+update public.epk_highlights set source2_label = 'DJ billing: official flyer on Instagram'
+ where title = 'Apollo Theater, Harlem' and source2_label = 'Event flyer naming DJ Eddie Ed';
+update public.epk_highlights set source_label = 'Rolling Out report'
+ where title = 'Marcus Garvey Park, with Les Nubians' and source_label = 'Rolling Out report + video';
+
+update public.epk_highlights
+   set image_url = 'assets/highlights/apollo-marquee-edited.jpg',
+       image_alt = 'Photo of the Apollo Theater marquee, edited to show the Asinamali night with DJ Eddie Ed',
+       image_caption = 'Edited photo: marquee wording added'
+ where title = 'Apollo Theater, Harlem' and coalesce(image_url, '') = '';
 
 -- Done. Next: Authentication → Users → Add user (tick "Auto Confirm User"),
 -- then sign in to the back office once. That first sign-in makes you the admin.

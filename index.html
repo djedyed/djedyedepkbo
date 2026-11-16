@@ -4,37 +4,107 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="app-version" content="1.1.0">
+  <meta name="theme-color" content="#0A0A0A">
+  <meta name="color-scheme" content="dark light">
   <link rel="icon" href="assets/logo-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="assets/logo-180.png">
   <title>Back Office — DJ Eddie Ed EPK</title>
+  <script>
+  /* Appearance (back-office standard): Auto follows the system, or Light / Dark. Warm is an in-page Night-Shift-style tint
+     (browsers cannot detect macOS Night Shift). Runs before paint so the page never flashes the wrong colours. */
+  (function () {
+    var P = 'djedyedepkbo_', r = document.documentElement, mq = matchMedia('(prefers-color-scheme: light)');
+    function get(k) { try { return localStorage.getItem(P + k); } catch (e) { return null; } }
+    function set(k, v) { try { localStorage.setItem(P + k, v); } catch (e) {} }
+    function mode() { var t = get('theme'); return t === 'light' || t === 'dark' ? t : 'auto'; }
+    function resolved() { var t = mode(); return t === 'auto' ? (mq.matches ? 'light' : 'dark') : t; }
+    function apply() {
+      var t = mode();
+      if (t === 'auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', t);
+      if (get('warm') === 'on') r.setAttribute('data-warm', ''); else r.removeAttribute('data-warm');
+      var m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', resolved() === 'light' ? '#F5F5F0' : '#0A0A0A');
+      var lbl = { auto: 'Auto', light: 'Light', dark: 'Dark' };
+      document.querySelectorAll('[data-theme-btn]').forEach(function (b) {
+        b.setAttribute('aria-label', 'Appearance: ' + lbl[t] + '. Activate to change.');
+        var s = b.querySelector('[data-theme-label]'); if (s) s.textContent = lbl[t];
+      });
+      document.querySelectorAll('[data-warm-btn]').forEach(function (b) { b.setAttribute('aria-checked', get('warm') === 'on' ? 'true' : 'false'); });
+    }
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-theme-btn],[data-warm-btn]'); if (!b) return;
+      if (b.hasAttribute('data-theme-btn')) { var t = mode(); set('theme', t === 'dark' ? 'light' : t === 'light' ? 'auto' : 'dark'); }
+      else set('warm', get('warm') === 'on' ? 'off' : 'on');
+      apply();
+    });
+    document.addEventListener('DOMContentLoaded', apply);
+  })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <script type="module" src="app.js"></script>
+  <link rel="stylesheet" href="styles.css?v=1.1.0">
+  <script type="module" src="app.js?v=1.1.0"></script>
 </head>
 <body>
   <header class="topbar">
     <p class="wordmark"><img src="assets/logo-64.png" alt="" width="26" height="26">EDDIE ED <span>BACK OFFICE</span></p>
-    <div class="who" id="who" hidden>
-      <span id="who-email"></span>
-      <button class="btn btn-ghost btn-sm" id="signout" type="button">Sign out</button>
+    <div class="top-right">
+      <div class="appearance" role="group" aria-label="Appearance">
+        <button class="chip" type="button" data-theme-btn><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg><span data-theme-label>Auto</span></button>
+        <button class="chip" type="button" data-warm-btn role="switch" aria-checked="false"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><span>Warm</span></button>
+      </div>
+      <div class="who" id="who" hidden>
+        <span id="who-email"></span>
+        <button class="btn btn-ghost btn-sm" id="signout" type="button">Sign out</button>
+      </div>
     </div>
   </header>
 
-  <!-- Sign in -->
-  <main id="view-login" class="narrow" hidden>
+  <!-- Sign in (back-office standard layout: providers, passkey, then email + password) -->
+  <main id="view-login" class="login" hidden>
+    <div class="appearance" role="group" aria-label="Appearance">
+      <button class="chip" type="button" data-theme-btn><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg><span data-theme-label>Auto</span></button>
+      <button class="chip" type="button" data-warm-btn role="switch" aria-checked="false"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><span>Warm</span></button>
+    </div>
     <h1>Sign in</h1>
-    <p class="muted">Only the admin account can open the back office. The first account that signs in becomes the admin.</p>
-    <form id="login-form" class="stack">
-      <label>Email<input name="email" type="email" required autocomplete="username"></label>
-      <label>Password<input name="password" type="password" required minlength="8" autocomplete="current-password"></label>
-      <div class="row">
-        <button class="btn btn-primary" type="submit">Sign in</button>
-        <button class="btn btn-ghost" type="button" id="signup">Create admin account</button>
+    <p class="muted login-sub">DJ Eddie Ed EPK back office</p>
+    <div class="login-card">
+      <div class="providers">
+        <button class="prov" type="button" data-prov="google"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.7l-7.5-5.8c-2.1 1.4-4.8 2.3-8 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg><span>Sign in with Google</span></button>
+        <button class="prov" type="button" data-prov="apple"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.63c-.03-2.7 2.2-4 2.3-4.06-1.25-1.83-3.2-2.08-3.9-2.11-1.66-.17-3.24.98-4.08.98-.85 0-2.14-.96-3.52-.93-1.81.03-3.48 1.05-4.41 2.67-1.88 3.26-.48 8.1 1.35 10.74.9 1.3 1.96 2.75 3.36 2.7 1.35-.05 1.86-.87 3.5-.87 1.63 0 2.09.87 3.52.84 1.45-.03 2.37-1.32 3.26-2.62 1.03-1.5 1.45-2.95 1.48-3.02-.03-.01-2.84-1.09-2.87-4.3zM13.7 4.6c.74-.9 1.24-2.15 1.1-3.4-1.07.04-2.37.71-3.14 1.61-.69.8-1.29 2.07-1.13 3.29 1.2.09 2.42-.61 3.17-1.5z"/></svg><span>Sign in with Apple</span></button>
+        <button class="prov" type="button" data-prov="azure"><svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true"><path fill="#F25022" d="M1 1h10v10H1z"/><path fill="#7FBA00" d="M12 1h10v10H12z"/><path fill="#00A4EF" d="M1 12h10v10H1z"/><path fill="#FFB900" d="M12 12h10v10H12z"/></svg><span>Sign in with Microsoft</span></button>
+        <button class="prov" type="button" data-prov="custom:yahoo"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5" fill="#6001D2"/><path fill="#fff" d="M5.6 6.5h3.1l2.3 5.4 2.3-5.4h3.1l-4 8.3V18H9.6v-3.2z"/></svg><span>Sign in with Yahoo</span></button>
+        <button class="prov" type="button" data-pk><span aria-hidden="true">🔑</span><span>Sign in with a passkey</span></button>
       </div>
-      <p class="status" id="login-status" role="status" aria-live="polite"></p>
-    </form>
+      <div class="or" role="separator"><span>or</span></div>
+      <form id="login-form" class="stack" novalidate>
+        <label class="plain">Email<input name="email" type="email" required autocomplete="username webauthn"></label>
+        <label class="plain">Password<input name="password" type="password" required minlength="8" autocomplete="current-password"></label>
+        <div class="row">
+          <button class="btn btn-primary" type="submit">Sign in</button>
+          <button class="btn btn-ghost" type="button" id="signup">Create account</button>
+        </div>
+        <div class="row"><button class="btn btn-ghost" type="button" id="forgot">Forgot password?</button></div>
+        <p class="status" id="login-status" role="status" aria-live="polite"></p>
+      </form>
+      <p class="fine">First time? Sign in with email and password once, then link Google, Apple, Microsoft, Yahoo or a passkey under Settings → Sign-in methods. Only the admin account can see anything here: the first account that signs in becomes the admin.</p>
+    </div>
+  </main>
+
+  <!-- Choose a new password (after a reset link) -->
+  <main id="view-reset" class="login" hidden>
+    <h1>Choose a new password</h1>
+    <div class="login-card">
+      <form id="reset-form" class="stack">
+        <label class="plain">New password<input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
+        <label class="plain">Repeat it<input name="password2" type="password" required minlength="8" autocomplete="new-password"></label>
+        <div class="row"><button class="btn btn-primary" type="submit">Save password</button></div>
+        <p class="status" id="reset-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
   </main>
 
   <!-- Database not set up yet -->
@@ -64,6 +134,7 @@
       <button type="button" data-tab="reviews">Reviews</button>
       <button type="button" data-tab="rates">Rates</button>
       <button type="button" data-tab="publish">Publish</button>
+      <button type="button" data-tab="settings">Settings</button>
     </nav>
     <main class="panel" id="panel" tabindex="-1"></main>
   </div>

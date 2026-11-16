@@ -15,6 +15,7 @@ If the public site is the dancefloor, this is the booth: you choose what plays, 
 | **Reviews** | Client quotes, word for word, with where they were published | Public when published |
 | **Rates** | Your price list | Only you, never public |
 | **Publish** | Link to the live EPK, download a `content.json` backup, and lock down sign-ups | — |
+| **Settings** | Sign-in methods (link Google, Apple, Microsoft, Yahoo), passkeys, change password | Only you |
 
 Built with free, open-source pieces: plain HTML, CSS and JavaScript, plus [supabase-js](https://github.com/supabase/supabase-js). There is no build step.
 
@@ -28,6 +29,18 @@ Built with free, open-source pieces: plain HTML, CSS and JavaScript, plus [supab
 3. **Open the back office** (locally or on GitHub Pages) and sign in. The first account that signs in becomes the **only** admin.
 4. **Lock the door.** In Supabase → Authentication → Sign In / Providers, turn off **Allow new users to sign up**.
 5. **Publish it.** In this repo go to Settings → Pages → Deploy from branch `main`. The back office will live at `https://djedyed.github.io/djedyedepkbo/`. The page is marked `noindex`, and nothing in it works without your login.
+
+## Signing in
+
+The sign-in screen follows the **back-office standard**:
+
+- **Providers:** Google, Apple, Microsoft and Yahoo buttons, plus a passkey button.
+- **Email and password:** with **Create account** and **Forgot password?**.
+- **Appearance:** buttons on every screen. Dark → Light → Auto (Auto follows your computer), and Warm, an amber evening tint.
+
+Email + password works straight away. Each other method needs switching on in Supabase once; [SIGNIN.md](SIGNIN.md) has the steps and costs (only Apple costs money). After that, link it to the admin account under **Settings → Sign-in methods**.
+
+A forgotten password? Type your email and press **Forgot password?**. The email link opens a "Choose a new password" screen.
 
 ## Security, in plain words
 
