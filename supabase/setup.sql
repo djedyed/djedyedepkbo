@@ -470,3 +470,11 @@ update public.epk_highlights
 
 -- Done. Next: Authentication → Users → Add user (tick "Auto Confirm User"),
 -- then sign in to the back office once. That first sign-in makes you the admin.
+
+-- epk_grants (added 2026-11-23): needed in the shared TRIBER project
+grant select on public.epk_profile, public.epk_highlights, public.epk_links, public.epk_reviews to anon, authenticated;
+grant insert on public.epk_inquiries to anon, authenticated;
+grant select, insert, update, delete on public.epk_profile, public.epk_highlights, public.epk_links, public.epk_reviews,
+      public.epk_inquiries, public.epk_rates, public.epk_proofs to authenticated;
+grant select on public.epk_admins to authenticated;
+notify pgrst, 'reload schema';
