@@ -149,7 +149,7 @@ async function afterLogin(session) {
   if (error) return isMissingSchema(error) ? showSetup(error) : toast(error.message, true);
   if (!isAdmin) return show('denied');
   show('app');
-  openTab('inbox');
+  openTab('overview');
 }
 
 for (const b of $$('#view-login [data-prov]')) b.addEventListener('click', () => goProvider(b.dataset.prov, '#login-status'));
@@ -247,6 +247,80 @@ async function must(promise) {
   if (error) throw error;
   return data;
 }
+
+
+// ---------------------------------------------------------------- overview (insight format, same kit as the TRIBER back office)
+/* ---- Insight kit (from triberabo 1.16), framework-free ---- */
+const kEsc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const kNf = n => Number(n || 0).toLocaleString();
+function kSpark(vals, label) {
+  const MAX = 48, step = Math.max(1, Math.ceil(vals.length / MAX)), b = [];
+  for (let i = 0; i < vals.length; i += step) b.push(vals.slice(i, i + step).reduce((a, c) => a + c, 0));
+  const top = Math.max(1, ...b), w = 100 / Math.max(1, b.length);
+  return `<svg viewBox="0 0 100 46" preserveAspectRatio="none" role="img" aria-label="${kEsc(label)}">${b.map((v, i) => { const h = v ? Math.max(2, v / top * 44) : 0; return h ? `<rect x="${(i * w + w * .15).toFixed(2)}" y="${(46 - h).toFixed(2)}" width="${(w * .7).toFixed(2)}" height="${h.toFixed(2)}" rx="1"/>` : ''; }).join('')}</svg>`;
+}
+function kChg(t, p, life) {
+  if (life) return ''; t = Number(t || 0); p = Number(p || 0);
+  if (!p && !t) return '<span class="chg">0%</span>'; if (!p) return '<span class="chg up">New</span>';
+  const x = (t - p) / p * 100; if (Math.round(Math.abs(x)) === 0) return '<span class="chg">0%</span>';
+  return `<span class="chg ${x >= 0 ? 'up' : 'dn'}">${x >= 0 ? '▲' : '▼'} ${Math.abs(x).toFixed(0)}%</span>`;
+}
+const kWindow = (days, id = 'insr') => `<div class="row sp"><span>${days === 0 ? '<span class="life">Lifetime</span>' : ''}</span><div class="row"><label class="muted" for="${id}">Window</label><select id="${id}" class="kf">${[[7, '7 days'], [30, '30 days'], [90, '90 days'], [365, '1 year'], [0, 'Lifetime']].map(([v, l]) => `<option value="${v}" ${v === days ? 'selected' : ''}>${l}</option>`).join('')}</select></div></div>`;
+const kTile = ({ l, v, chg = '', ser = null, go = '' }) => `<${go ? 'button type="button"' : 'div'} class="kt"${go ? ` data-go="${kEsc(go)}"` : ''}><span class="l">${kEsc(l)}</span><b>${v === null || v === undefined ? '–' : v}</b>${chg ? `<span class="row" style="gap:6px;margin:0 0 4px">${chg}</span>` : ''}${ser ? kSpark(ser, l + ' per day') : ''}</${go ? 'button' : 'div'}>`;
+const kHighlights = (items, none) => items.length ? `<div class="ms">${items.map(m => `<div class="m"><i aria-hidden="true">${kEsc(m.icon)}</i><div><small>${kEsc(m.label)}</small>${m.html}</div></div>`).join('')}</div>` : `<div class="none">${none || 'Nothing yet.'}</div>`;
+const kRank = (rows, key = 'n', fmt = kNf) => rows.length ? rows.map((r, i) => `<div class="rk"><span class="n">${i + 1}</span><span class="t">${kEsc(r.title)}</span><span class="v">${fmt(r[key])}</span></div>`).join('') : `<div class="none">Nothing yet.</div>`;
+/* rows -> {ser: per-day counts, now, prev}. days=0 is lifetime (series by month-ish buckets of the whole range, no prev). */
+function kPeriod(rows, dateOf, days, valueOf = () => 1, pred = () => true) {
+  const DAY = 864e5, end = new Date(); end.setHours(23, 59, 59, 999);
+  const list = rows.filter(pred).map(r => ({ t: +new Date(dateOf(r)), v: Number(valueOf(r)) || 0 })).filter(x => !isNaN(x.t));
+  let start, n;
+  if (days === 0) { const min = list.length ? Math.min(...list.map(x => x.t)) : +end - 29 * DAY; n = Math.max(2, Math.min(120, Math.ceil((+end - min) / DAY))); start = +end - n * DAY; }
+  else { n = days; start = +end - n * DAY; }
+  const ser = new Array(n).fill(0); let now = 0, prev = 0;
+  for (const x of list) {
+    if (x.t > start && x.t <= +end) { ser[Math.min(n - 1, Math.floor((x.t - start) / DAY))] += x.v; now += x.v; }
+    else if (days && x.t > start - n * DAY && x.t <= start) prev += x.v;
+  }
+  return { ser, now, prev };
+}
+
+let insDays = 30;
+TABS.overview = async (panel) => {
+  const [inq, rev, hl] = await Promise.all([
+    must(sb.from('epk_inquiries').select('created_at,status,event_type,budget,name').order('created_at', { ascending: false })),
+    must(sb.from('epk_reviews').select('created_at,is_published')),
+    must(sb.from('epk_highlights').select('id,is_published')),
+  ]);
+  const life = insDays === 0;
+  const P = (rows, pred) => kPeriod(rows, r => r.created_at, insDays, () => 1, pred);
+  const all = P(inq), booked = P(inq, r => r.status === 'booked'), quoted = P(inq, r => r.status === 'quoted'), reviews = P(rev);
+  const waiting = inq.filter(r => r.status === 'new').length;
+  const inWin = inq.filter(r => !insDays || +new Date(r.created_at) > Date.now() - insDays * 864e5);
+  const tally = (key) => Object.entries(inWin.reduce((m, r) => { const k = (r[key] || '').trim() || 'Not given'; m[k] = (m[k] || 0) + 1; return m; }, {})).map(([title, n]) => ({ title, n })).sort((x, y) => y.n - x.n).slice(0, 6);
+  const types = tally('event_type'), budgets = tally('budget');
+  const status = Object.entries(inWin.reduce((m, r) => { m[r.status] = (m[r.status] || 0) + 1; return m; }, {})).map(([title, n]) => ({ title, n })).sort((x, y) => y.n - x.n);
+  const rate = inWin.length ? Math.round(100 * inWin.filter(r => r.status === 'booked').length / inWin.length) : 0;
+  const last = inq[0];
+  const tiles = [
+    kTile({ l: 'Inquiries', v: kNf(all.now), chg: kChg(all.now, all.prev, life), ser: all.ser, go: 'inbox' }),
+    kTile({ l: 'Booked', v: kNf(booked.now), chg: kChg(booked.now, booked.prev, life), ser: booked.ser, go: 'inbox' }),
+    kTile({ l: 'Quoted', v: kNf(quoted.now), chg: kChg(quoted.now, quoted.prev, life), ser: quoted.ser, go: 'inbox' }),
+    kTile({ l: 'Waiting for a reply', v: kNf(waiting), go: 'inbox' }),
+    kTile({ l: 'Reviews added', v: kNf(reviews.now), chg: kChg(reviews.now, reviews.prev, life), ser: reviews.ser, go: 'reviews' }),
+    kTile({ l: 'Highlights live', v: kNf(hl.filter(h => h.is_published).length), go: 'highlights' }),
+  ].join('');
+  const items = [];
+  if (last) items.push({ icon: '✉', label: 'Latest inquiry', html: `<b>${kEsc(last.name)}</b><br><span class="muted">${new Date(last.created_at).toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' })} · ${kEsc(last.status)}</span>` });
+  if (types[0]) items.push({ icon: '★', label: 'Most asked event type', html: `<b>${kEsc(types[0].title)}</b> <span class="muted">${kNf(types[0].n)} inquiries</span>` });
+  if (inWin.length) items.push({ icon: '%', label: 'Booking rate', html: `<b>${rate}%</b> <span class="muted">of ${kNf(inWin.length)} inquiries in this window</span>` });
+  if (waiting) items.push({ icon: '!', label: 'Needs you', html: `<b>${kNf(waiting)}</b> <span class="muted">inquiries still marked new</span>` });
+  panel.innerHTML = `<div class="ins"><h2>Overview</h2>${kWindow(insDays)}
+    <div class="sec">Key metrics</div><div class="tiles">${tiles}</div>
+    <div class="sec">Highlights</div>${kHighlights(items, 'Your first inquiry will show up here.')}
+    <div class="tops"><div><div class="sec">Event types</div>${kRank(types)}</div><div><div class="sec">Budgets</div>${kRank(budgets)}</div><div><div class="sec">Pipeline</div>${kRank(status)}</div></div></div>`;
+  panel.querySelectorAll('.kt[data-go]').forEach(b => b.addEventListener('click', () => openTab(b.dataset.go)));
+  panel.querySelector('#insr').addEventListener('change', e => { insDays = +e.target.value; openTab('overview'); });
+};
 
 // ---------------------------------------------------------------- inbox
 const STATUSES = ['new', 'replied', 'quoted', 'booked', 'declined', 'archived'];

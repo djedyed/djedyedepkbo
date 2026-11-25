@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0 — 2026-11-24
+- New **Overview** tab, now the first tab: the same insight format as the TRIBER back office. A window picker (7 days to Lifetime), key-metric tiles with change vs the previous period and a small bar chart (Inquiries, Booked, Quoted, Waiting for a reply, Reviews added, Highlights live), a Highlights row (latest inquiry, most asked event type, booking rate) and ranked lists for event types, budgets and pipeline. Tiles open the matching tab.
+
 ## 1.1.0 — 2026-11-15
 
 ### Sign-in
